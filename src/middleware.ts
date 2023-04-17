@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import acceptLanguage from 'accept-language'
 
-import { DEFAULT_LANGUAGE, LANGUAGES } from "./app/i18n/settings";
+import { ALL_LANGUAGES, DEFAULT_LANGUAGE, LANGUAGES } from "./app/i18n/settings";
 
 acceptLanguage.languages(LANGUAGES);
 
@@ -12,7 +12,7 @@ String.prototype.count = function(character: string) {
 
 function doesURLContainsLangParam(url: string) {
   let isIndex = url.count('/') === 1;
-  return LANGUAGES.some((language) => isIndex ? url === `/${language}` : url.startsWith(`/${language}/`));
+  return ALL_LANGUAGES.some((language) => isIndex ? url === `/${language}` : url.startsWith(`/${language}/`));
 }
 
 function detectLanguage(request: NextRequest) {
@@ -38,26 +38,55 @@ function detectLanguage(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  const lang = detectLanguage(request);
+  let lang = detectLanguage(request);
+
+  if(!LANGUAGES.includes(lang)) {
+    lang = DEFAULT_LANGUAGE;
+  }
+
+  let res: (NextResponse | null) = null;
+
+  let setCookie = true;
 
   if(lang === DEFAULT_LANGUAGE) {
+    let destination;
     if(!doesURLContainsLangParam(pathname)) {
-      const destination = `/${DEFAULT_LANGUAGE}/${pathname}`.replace(/\/\//g, '/');
-
-      return NextResponse.rewrite(
+      destination = `/${DEFAULT_LANGUAGE}/${pathname}`.replace(/\/\//g, '/');
+      res = NextResponse.rewrite(
         new URL(destination, request.url)
       );
+    } else {
+      const frags = pathname.split('/');
+      delete frags[1];
+      destination = `${frags.join('/')}`.replace(/\/\//g, '/');
+      res = NextResponse.redirect(
+        new URL(destination, request.url)
+      );
+
+      // Here the `lang` will be `en`. If cookie is set, it'll rewrite the existing value.
+      setCookie = false;
     }
   } else {
     if(!doesURLContainsLangParam(pathname)) {
       const destination = `/${lang}/${pathname}`.replace(/\/\//g, '/');
-      return NextResponse.redirect(
+      res = NextResponse.redirect(
         new URL(destination, request.url)
       );
     }
   }
 
-  return NextResponse.next();
+  if(!res) {
+    res = NextResponse.next();
+  }
+
+  if(setCookie) {
+    res.cookies.set('preferred-language', lang, {
+      path: '/',
+      httpOnly: true,
+    });
+  }
+
+  return res;
 }
 
 export const config = {

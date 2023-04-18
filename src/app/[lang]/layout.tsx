@@ -39,8 +39,7 @@ function Header(props: any) {
         frags.splice(1, 0, language);
       }
 
-      const url = frags.join('/')
-                    .replace(`/${DEFAULT_LANGUAGE}`, ''); // Removing /en if it's selected
+      const url = frags.join('/');
   
       router.replace(url);
     }

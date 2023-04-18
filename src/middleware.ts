@@ -39,26 +39,27 @@ export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   let lang = detectLanguage(request);
+  let isSupportedLanguage = true;
 
   if(!LANGUAGES.includes(lang)) {
-    lang = DEFAULT_LANGUAGE;
+    isSupportedLanguage = false;
   }
 
   let res: (NextResponse | null) = null;
 
   let setCookie = true;
 
-  if(lang === DEFAULT_LANGUAGE) {
-    let destination;
+  if(!isSupportedLanguage) {
     if(!doesURLContainsLangParam(pathname)) {
-      destination = `/${DEFAULT_LANGUAGE}/${pathname}`.replace(/\/\//g, '/');
+      const destination = `/${DEFAULT_LANGUAGE}/${pathname}`.replace(/\/\//g, '/');
       res = NextResponse.rewrite(
         new URL(destination, request.url)
       );
     } else {
       const frags = pathname.split('/');
       delete frags[1];
-      destination = `${frags.join('/')}`.replace(/\/\//g, '/');
+
+      const destination = `${frags.join('/')}`.replace(/\/\//g, '/');
       res = NextResponse.redirect(
         new URL(destination, request.url)
       );

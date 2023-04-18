@@ -1,7 +1,7 @@
 import i18next, { TOptionsBase } from "i18next";
 import 'intl-pluralrules';
 import { initReactI18next, useTranslation as useTranslationOrg } from "react-i18next";
-import { getOptions } from "./settings";
+import { DEFAULT_LANGUAGE, LANGUAGES, getOptions } from "./settings";
 import { useEffect, useState } from "react";
 
 i18next
@@ -25,6 +25,10 @@ function useCustomT(namespaces: string[] = ["common"], options: any = {}) {
 
 export function useTranslation(language: string = "en", namespaces: string[] = ["common"], options: any = {}) {
     const [dict, setDict] = useState({});
+
+    if(!LANGUAGES.includes(language)) {
+        language = DEFAULT_LANGUAGE;
+    }
 
     useEffect(() => {
         async function loadLocales() {

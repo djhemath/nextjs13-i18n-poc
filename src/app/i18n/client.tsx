@@ -32,6 +32,18 @@ export function useTranslation(language: string = "en", namespaces: string[] = [
 
     useEffect(() => {
         async function loadLocales() {
+
+            // Remove previously loaded languages
+            const previouslyLoadedLanguages = i18next.services.resourceStore.data;
+
+            for(let lang in previouslyLoadedLanguages) {
+                if(lang !== language) {
+                    for(let ns in previouslyLoadedLanguages[lang]) {
+                        i18next.removeResourceBundle(lang, ns);
+                    }
+                }
+            }
+
             const locales: any = {};
 
             for(let i=0; i<namespaces.length; i++) {

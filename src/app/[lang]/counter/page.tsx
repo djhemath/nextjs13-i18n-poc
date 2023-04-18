@@ -2,8 +2,9 @@
 
 import { useTranslation } from "@/app/i18n/client";
 import { getURL } from "@/utils/i18n";
-import { Box, Button, Flex, Link, Text } from "@chakra-ui/react";
+import { Box, Button, Flex, Text } from "@chakra-ui/react";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function CounterPage(props: any) {
     const lang = props.params.lang;

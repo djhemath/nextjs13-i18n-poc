@@ -38,6 +38,13 @@ function detectLanguage(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
+  function rewriteWithoutDefaultLanguage() {
+    const destination = `/${DEFAULT_LANGUAGE}/${pathname}`.replace(/\/\//g, '/');
+    return NextResponse.rewrite(
+      new URL(destination, request.url)
+    );
+  }
+
   let lang = detectLanguage(request);
   let isSupportedLanguage = true;
 
@@ -51,10 +58,7 @@ export function middleware(request: NextRequest) {
 
   if(!isSupportedLanguage) {
     if(!doesURLContainsLangParam(pathname)) {
-      const destination = `/${DEFAULT_LANGUAGE}/${pathname}`.replace(/\/\//g, '/');
-      res = NextResponse.rewrite(
-        new URL(destination, request.url)
-      );
+      res = rewriteWithoutDefaultLanguage();
     } else {
       const frags = pathname.split('/');
       delete frags[1];
@@ -69,10 +73,14 @@ export function middleware(request: NextRequest) {
     }
   } else {
     if(!doesURLContainsLangParam(pathname)) {
-      const destination = `/${lang}/${pathname}`.replace(/\/\//g, '/');
-      res = NextResponse.redirect(
-        new URL(destination, request.url)
-      );
+      if(lang !== DEFAULT_LANGUAGE) {
+        const destination = `/${lang}/${pathname}`.replace(/\/\//g, '/');
+        res = NextResponse.redirect(
+          new URL(destination, request.url)
+        );
+      } else {
+        res = rewriteWithoutDefaultLanguage();
+      }
     }
   }
 
